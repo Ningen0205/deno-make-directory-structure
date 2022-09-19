@@ -1,6 +1,6 @@
 import { Directory, configureStructure } from "./mod.ts";
 
-const structure: Directory = {
+export const structure: Directory = {
   type: "Directory",
   name: "generate_src",
   childrens: [
@@ -27,5 +27,3 @@ const structure: Directory = {
     },
   ],
 };
-
-await configureStructure(structure, ".");
