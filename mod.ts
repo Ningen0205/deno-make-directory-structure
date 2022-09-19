@@ -10,40 +10,48 @@ export type Directory = {
   childrens: Array<Directory | CreateFile>;
 };
 
-const makeFile = async (to: string, from?: string): Promise<void> => {
-  console.info(`called makeFile. to: ${to}, from: ${from}`);
-  if (from) {
-    await Deno.copyFile(from, to);
-  } else {
-    await Deno.writeTextFile(to, "");
+export interface IFileHandler {
+  makeFile(to: string, from?: string): Promise<void>;
+  makeDirectory(directoryPath: string): Promise<void>;
+  deleteFile(filePath: string): Promise<void>;
+  deleteDirectory(directoryPath: string): Promise<void>;
+}
+
+export class FileHandler implements IFileHandler {
+  async makeFile(to: string, from?: string | undefined): Promise<void> {
+    if (from) {
+      await Deno.copyFile(from, to);
+    } else {
+      await Deno.writeTextFile(to, "");
+    }
   }
-};
 
-const makeDirectory = async (directoryPath: string): Promise<void> => {
-  console.info(`called makeDirectory. directoryPath: ${directoryPath}`);
-  await Deno.mkdir(directoryPath);
-};
+  async makeDirectory(directoryPath: string): Promise<void> {
+    await Deno.mkdir(directoryPath);
+  }
 
-const deleteDirectory = async (directoryPath: string): Promise<void> => {
-  await Deno.remove(directoryPath, { recursive: true });
-};
+  async deleteFile(filePath: string): Promise<void> {
+    await Deno.remove(filePath);
+  }
+
+  async deleteDirectory(directoryPath: string): Promise<void> {
+    await Deno.remove(directoryPath, { recursive: true });
+  }
+}
+
+const fileHandler = new FileHandler();
 
 export const configureStructure = async (
   directory: Directory,
   baseDir: string
 ): Promise<void> => {
-  console.info(
-    `called configureStructure. directory: ${JSON.stringify(
-      directory
-    )}, baseDir: ${baseDir}`
-  );
-  await makeDirectory(`${baseDir}/${directory.name}`);
+  await fileHandler.makeDirectory(`${baseDir}/${directory.name}`);
 
   directory.childrens.map(async (child) => {
     if (child.type === "Directory") {
       return await configureStructure(child, `${baseDir}/${directory.name}`);
     }
-    return await makeFile(
+    return await fileHandler.makeFile(
       `${baseDir}/${directory.name}/${child.name}`,
       child.templateFilePath
     );
@@ -54,5 +62,5 @@ export const deleteStructure = async (
   directory: Directory,
   baseDir: string
 ) => {
-  await deleteDirectory(`${baseDir}/${directory.name}`);
+  await fileHandler.deleteDirectory(`${baseDir}/${directory.name}`);
 };
