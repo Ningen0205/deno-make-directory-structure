@@ -24,6 +24,10 @@ const makeDirectory = async (directoryPath: string): Promise<void> => {
   await Deno.mkdir(directoryPath);
 };
 
+const deleteDirectory = async (directoryPath: string): Promise<void> => {
+  await Deno.remove(directoryPath, { recursive: true });
+};
+
 export const configureStructure = async (
   directory: Directory,
   baseDir: string
@@ -44,4 +48,11 @@ export const configureStructure = async (
       child.templateFilePath
     );
   });
+};
+
+export const deleteStructure = async (
+  directory: Directory,
+  baseDir: string
+) => {
+  await deleteDirectory(`${baseDir}/${directory.name}`);
 };
